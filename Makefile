@@ -2,7 +2,7 @@
 # Không bao giờ cài vào Python hệ thống hoặc conda base.
 PY ?= python
 
-.PHONY: check-env install run test lint fmt chat bench up down update rollback news-check news-fetch qdrant-up qdrant-down qdrant-switch dev cli dev-up dev-down dev-restart dev-status dev-logs ollama-up ollama-down ollama-pull ollama-check ollama-status server-check server-up server-down server-status server-logs sample-docs ingest search eval kb-stats
+.PHONY: check-env install run test lint fmt chat bench up down update news-check news-fetch qdrant-up qdrant-down qdrant-switch dev cli dev-up dev-down dev-restart dev-status dev-logs ollama-up ollama-down ollama-pull ollama-check ollama-status server-check server-up server-down server-status server-logs sample-docs ingest search eval kb-stats
 
 check-env:
 	@$(PY) -c "import os,sys; ok = sys.prefix != sys.base_prefix or os.environ.get('CONDA_DEFAULT_ENV', 'base') != 'base'; sys.exit(0 if ok else 1)" || { echo "LOI: chua kich hoat env rieng (conda env hoac venv). Khong cai vao Python he thong hoac conda base."; exit 1; }
@@ -76,12 +76,9 @@ server-status:
 server-logs:
 	bash scripts/server.sh logs
 
-# Áp bản cập nhật code (zip chỉ chứa file thay đổi) / hoàn tác lần cập nhật gần nhất
+# Áp bản cập nhật code (zip chỉ chứa file thay đổi). Quay lại bản trước: git restore .
 update:
 	bash scripts/update.sh update $(ZIP)
-
-rollback:
-	bash scripts/update.sh rollback
 
 # Chạy cả hệ thống bằng 1 lệnh (tự kích hoạt conda env rag_llm): Ollama + API nền + mở web
 dev:

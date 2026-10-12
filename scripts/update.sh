@@ -3,15 +3,13 @@
 #
 #   make update                      lấy RAG_LLM_*.zip mới nhất trong ~/Downloads
 #   make update ZIP=đường/dẫn.zip    chỉ định file zip
-#   make rollback                    khôi phục các file trước lần cập nhật gần nhất
 #
-# Các bước: sao lưu file cũ sắp bị ghi đè -> giải nén đè -> chạy test -> khởi động lại API
-# -> chuyển zip đã áp sang ~/Downloads/RAG_LLM_applied/ để lần sau không áp lại.
+# Các bước: giải nén đè -> xoá zip -> chạy test -> khởi động lại API.
+# Không tự sao lưu: project đã có git. Quay lại bản trước: git restore .  (file mới: git clean -n)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
-BACKUP_ROOT="$ROOT/.run/backup"
 ENV_NAME="${RAG_ENV:-rag_llm}"
 
 activate_env() {
@@ -21,19 +19,6 @@ activate_env() {
   source "$(conda info --base)/etc/profile.d/conda.sh"
   conda activate "$ENV_NAME"
   set -u
-}
-
-cmd_rollback() {
-  last="$(ls -1d "$BACKUP_ROOT"/*/ 2>/dev/null | sort | tail -1 || true)"
-  [ -n "$last" ] || { echo "Khong co ban sao luu nao."; exit 1; }
-  echo "Khoi phuc tu: $last"
-  (cd "$last" && find . -type f ! -name .new_files -print | while read -r f; do
-    mkdir -p "$ROOT/$(dirname "$f")"; cp "$f" "$ROOT/$f"; echo "  khoi phuc ${f#./}"; done)
-  if [ -f "$last/.new_files" ]; then  # file mới do bản cập nhật thêm vào -> xoá
-    while read -r f; do [ -n "$f" ] && rm -fv "$ROOT/$f" | sed 's/^/  xoa /'; done <"$last/.new_files"
-  fi
-  rm -rf "$last"
-  bash scripts/dev.sh restart || true
 }
 
 cmd_update() {
@@ -49,26 +34,12 @@ cmd_update() {
   done
   echo "Ap dung $(basename "$ZIP") (${#FILES[@]} file):"
 
-  ts="$(date +%Y%m%d-%H%M%S)"
-  backup="$BACKUP_ROOT/$ts"
-  mkdir -p "$backup"
-  : >"$backup/.new_files"
   for f in "${FILES[@]}"; do
-    if [ -f "$ROOT/$f" ]; then
-      mkdir -p "$backup/$(dirname "$f")"
-      cp "$ROOT/$f" "$backup/$f"
-      echo "  sua  $f"
-    else
-      echo "$f" >>"$backup/.new_files"
-      echo "  moi  $f"
-    fi
+    if [ -f "$ROOT/$f" ]; then echo "  sua  $f"; else echo "  moi  $f"; fi
   done
   unzip -oq "$ZIP" -d "$ROOT"
   chmod +x scripts/*.sh 2>/dev/null || true
-
-  mkdir -p "$HOME/Downloads/RAG_LLM_applied"
-  mv "$ZIP" "$HOME/Downloads/RAG_LLM_applied/" 2>/dev/null || true
-  echo "Sao luu file cu: $backup   (hoan tac: make rollback)"
+  rm -f "$ZIP"  # đã áp xong, xoá để lần sau không áp lại
 
   activate_env
   if [[ " ${FILES[*]} " == *" pyproject.toml "* ]]; then  # bản cập nhật đổi danh sách thư viện
@@ -77,7 +48,7 @@ cmd_update() {
   fi
   echo; echo "Chay test..."
   if ! python -m pytest -q; then
-    echo; echo "CANH BAO: test loi. Gui log tren cho Claude, hoac 'make rollback' de quay lai."
+    echo; echo "CANH BAO: test loi. Gui log tren cho Claude, hoac 'git restore .' de quay lai."
     exit 1
   fi
   echo
@@ -86,7 +57,6 @@ cmd_update() {
 }
 
 case "${1:-update}" in
-  update)   shift || true; cmd_update "${1:-}" ;;
-  rollback) cmd_rollback ;;
-  *) echo "Dung: bash scripts/update.sh [update [file.zip]|rollback]"; exit 1 ;;
+  update) shift || true; cmd_update "${1:-}" ;;
+  *) echo "Dung: bash scripts/update.sh [update [file.zip]]"; exit 1 ;;
 esac

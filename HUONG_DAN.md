@@ -80,8 +80,8 @@ bài báo, và ngược lại.
 Claude gửi file `RAG_LLM_vX.zip` (chỉ chứa file thay đổi). Tải về `~/Downloads` rồi:
 
 ```bash
-make update      # sao lưu file cũ, ghi đè, cài thư viện mới nếu có, chạy test, khởi động lại
-make rollback    # quay lại bản trước nếu bản mới có vấn đề
+make update      # ghi đè, cài thư viện mới nếu có, chạy test, khởi động lại, xoá zip
+git restore .    # quay lại bản đã commit gần nhất nếu bản mới có vấn đề
 ```
 
 ---
@@ -129,8 +129,8 @@ một lần, dữ liệu được chép sang, không phải nạp lại:
 make qdrant-switch
 ```
 
-Từ đó `make dev` / `make dev-down` tự bật / tắt Qdrant server. Thư mục `data/qdrant` cũ giữ
-nguyên làm bản sao lưu.
+Từ đó `make dev` / `make dev-down` tự bật / tắt Qdrant server. Thư mục `data/qdrant` cũ không
+còn dùng, xoá được (`rm -rf data/qdrant`).
 
 ---
 
