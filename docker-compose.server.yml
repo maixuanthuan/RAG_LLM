@@ -1,0 +1,75 @@
+# Triển khai đầy đủ trên máy có GPU NVIDIA: API + web, Qdrant, Ollama (LLM + embedding trên GPU).
+# Yêu cầu: Docker, Docker Compose, NVIDIA driver + nvidia-container-toolkit.
+#
+#   make server-up       build + bật (lần đầu tự tải model, vài phút)
+#   make server-down     tắt (dữ liệu giữ nguyên)
+#   make server-status   trạng thái, model nào đang trên GPU
+#   make server-logs     xem log API
+#
+# Cấu hình: .env (dùng chung với máy dev) + server.env (ghi đè riêng cho server: model, địa chỉ
+# các dịch vụ). Cổng web: API_BIND / API_PORT trong .env, mặc định 127.0.0.1:8080 (chỉ máy server
+# mở được; từ máy khác dùng SSH tunnel, hoặc đặt API_BIND=0.0.0.0 để mở cho mạng nội bộ).
+
+services:
+  api:
+    build: .
+    env_file: [server.env] # biến môi trường được ưu tiên hơn .env
+    ports:
+      - "${API_BIND:-127.0.0.1}:${API_PORT:-8080}:8080"
+    volumes:
+      - ./.env:/app/.env:ro
+      - ./data:/app/data # SQLite, file tải lên, bài báo: cùng cấu trúc data/ của máy dev
+    depends_on:
+      qdrant:
+        condition: service_started
+      models:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  qdrant:
+    image: ${QDRANT_IMAGE:-qdrant/qdrant:latest}
+    volumes:
+      - qdrant_storage:/qdrant/storage # dựng lại được từ SQLite nếu mất (tự làm lúc API khởi động)
+    restart: unless-stopped
+
+  ollama:
+    image: ${OLLAMA_IMAGE:-ollama/ollama:latest}
+    environment:
+      OLLAMA_CONTEXT_LENGTH: ${OLLAMA_CONTEXT_LENGTH:-8192}
+      OLLAMA_KEEP_ALIVE: "-1" # giữ model trên GPU, không phải nạp lại mỗi lần hỏi
+      OLLAMA_MAX_LOADED_MODELS: "2" # LLM + embedding cùng nằm trên GPU
+    volumes:
+      - ollama_models:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  # Chạy một lần mỗi khi bật: tải LLM_MODEL và EMBED_MODEL nếu chưa có (có rồi thì bỏ qua,
+  # nên server mất mạng vẫn bật được)
+  models:
+    image: ${OLLAMA_IMAGE:-ollama/ollama:latest}
+    env_file: [server.env]
+    environment:
+      OLLAMA_HOST: ollama:11434
+    entrypoint:
+      - /bin/sh
+      - -c
+      - for m in "$$LLM_MODEL" "$$EMBED_MODEL"; do ollama show "$$m" >/dev/null 2>&1 || ollama pull "$$m" || exit 1; done
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: "no"
+
+volumes:
+  qdrant_storage:
+  ollama_models:

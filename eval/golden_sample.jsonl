@@ -1,0 +1,15 @@
+{"question": "Nhân viên chính thức được nghỉ phép bao nhiêu ngày một năm?", "documents": ["Quy_dinh_nhan_su.docx"], "contains": ["12 ngày"]}
+{"question": "nhan vien thu viec co duoc nghi phep nam khong", "documents": ["Quy_dinh_nhan_su.docx"], "contains": ["không được hưởng phép năm"]}
+{"question": "Phải báo trước bao nhiêu ngày khi xin nghỉ phép?", "documents": ["Quy_dinh_nhan_su.docx"], "contains": ["3 ngày làm việc"]}
+{"question": "Lương thử việc bằng bao nhiêu phần trăm lương chính thức?", "documents": ["Quy_dinh_nhan_su.docx"], "contains": ["85%"]}
+{"question": "Thời gian thử việc tối đa là bao lâu?", "documents": ["Quy_dinh_nhan_su.docx"], "contains": ["60 ngày"]}
+{"question": "Làm thêm giờ vào ngày lễ được tính hệ số bao nhiêu?", "documents": ["Quy_dinh_nhan_su.docx"], "contains": ["300%"]}
+{"question": "Mức phụ cấp ăn trưa mỗi tháng là bao nhiêu?", "documents": ["Bang_phu_cap.xlsx"], "contains": ["730.000"]}
+{"question": "Trưởng phòng được phụ cấp xăng xe bao nhiêu?", "documents": ["Bang_phu_cap.xlsx"], "contains": ["1.200.000"]}
+{"question": "Hạn hoàn ứng sau khi đi công tác là bao lâu?", "documents": ["Quy_trinh_thanh_toan.docx"], "contains": ["7 ngày làm việc"]}
+{"question": "Đi công tác ở TP.HCM được thanh toán tiền lưu trú bao nhiêu một ngày?", "documents": ["Quy_trinh_thanh_toan.docx"], "contains": ["1.200.000"]}
+{"question": "mat khau phai dai toi thieu bao nhieu ky tu", "documents": ["Chinh_sach_CNTT.docx"], "contains": ["12 ký tự"]}
+{"question": "Khi làm việc từ xa có bắt buộc dùng VPN không?", "documents": ["Chinh_sach_CNTT.docx"], "contains": ["VPN"]}
+{"question": "Mất laptop thì báo cho ai và trong bao lâu?", "documents": ["Chinh_sach_CNTT.docx"], "contains": ["24 giờ"]}
+{"question": "Giờ làm việc của công ty là mấy giờ?", "documents": ["Huong_dan_onboarding.txt"], "contains": ["8:30"]}
+{"question": "Laptop được nhận ở đâu vào ngày đầu đi làm?", "documents": ["Huong_dan_onboarding.txt"], "contains": ["phòng IT"]}
